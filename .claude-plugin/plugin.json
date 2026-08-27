@@ -1,9 +1,20 @@
 {
   "name": "stafraen-heilsa",
-  "version": "0.4.0",
-  "description": "Project hub for Stafræn Heilsa — kickoff new projects, run visual design sprints, and push session artifacts to Notion. Aligned with the Hönnunarhandbók 4-phase UCD process.",
+  "version": "0.5.0",
+  "description": "Project workflows for Stafræn Heilsa — kickoff new projects and push artifacts to Notion (nytt-verkefni), and manage work, backlogs and reporting in GitHub (github-verkefni). Aligned with the Hönnunarhandbók 4-phase UCD process and the Þróunarhandbók.",
   "author": {
     "name": "Stafræn Heilsa"
   },
-  "keywords": ["notion", "project-management", "healthcare", "iceland", "ux", "design"]
+  "keywords": [
+    "notion",
+    "project-management",
+    "healthcare",
+    "iceland",
+    "ux",
+    "design",
+    "github",
+    "issues",
+    "backlog",
+    "planning"
+  ]
 }
