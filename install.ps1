@@ -1,29 +1,54 @@
 # Stafræn Heilsa — Claude Skill Installer (Windows)
 # Run this once to install, re-run to update
 
-$REPO = "https://github.com/Stafraen-Heilsa/claude-plugin"
-$SKILL_NAME = "nytt-verkefni"
-$SKILLS_DIR = "$env:USERPROFILE\.claude\skills\$SKILL_NAME"
+$BASE = "https://raw.githubusercontent.com/Stafraen-Heilsa/claude-plugin/main/skills"
 
-Write-Host "Installing $SKILL_NAME skill..." -ForegroundColor Cyan
+function Install-Skill {
+    param([string]$Name, [string[]]$Files)
 
-# Create skill directory
-New-Item -ItemType Directory -Force -Path "$SKILLS_DIR\references" | Out-Null
+    $dir = "$env:USERPROFILE\.claude\skills\$Name"
+    $raw = "$BASE/$Name"
 
-# Base URL for raw file download
-$RAW = "https://raw.githubusercontent.com/Stafraen-Heilsa/claude-plugin/main/skills/$SKILL_NAME"
+    Write-Host "Installing $Name..." -ForegroundColor Cyan
+    New-Item -ItemType Directory -Force -Path "$dir\references" | Out-Null
+    New-Item -ItemType Directory -Force -Path "$dir\scripts" | Out-Null
 
-# Download SKILL.md
-Invoke-WebRequest -Uri "$RAW/SKILL.md" -OutFile "$SKILLS_DIR\SKILL.md"
-Write-Host "  + SKILL.md" -ForegroundColor Green
+    Invoke-WebRequest -Uri "$raw/SKILL.md" -OutFile "$dir\SKILL.md"
+    Write-Host "  + SKILL.md" -ForegroundColor Green
 
-# Download reference handbooks
-$refs = @("honnunarhandbok.md", "throdunarhandbok.md", "throdunarhandbok-vidaukar.md")
-foreach ($ref in $refs) {
-    Invoke-WebRequest -Uri "$RAW/references/$ref" -OutFile "$SKILLS_DIR\references\$ref"
-    Write-Host "  + references/$ref" -ForegroundColor Green
+    foreach ($f in $Files) {
+        $target = Join-Path $dir ($f -replace '/', '\')
+        $parent = Split-Path $target -Parent
+        if (-not (Test-Path $parent)) { New-Item -ItemType Directory -Force -Path $parent | Out-Null }
+        try {
+            Invoke-WebRequest -Uri "$raw/$f" -OutFile $target
+            Write-Host "  + $f" -ForegroundColor Green
+        } catch {
+            Write-Host "  ! $f failed" -ForegroundColor Red
+        }
+    }
+    Write-Host ""
 }
 
-Write-Host ""
-Write-Host "Done! Skill installed to: $SKILLS_DIR" -ForegroundColor Green
+Install-Skill -Name "nytt-verkefni" -Files @(
+    "references/honnunarhandbok.md",
+    "references/throdunarhandbok.md",
+    "references/throdunarhandbok-vidaukar.md"
+)
+
+Install-Skill -Name "github-verkefni" -Files @(
+    "references/taxonomy.md",
+    "references/manifest-schema.md",
+    "references/handbook-rules.md",
+    "references/queries.md",
+    "references/conventions.md",
+    "scripts/sync-labels.sh"
+)
+
+Write-Host "Done! Skills installed to: $env:USERPROFILE\.claude\skills\" -ForegroundColor Green
 Write-Host "Restart Claude Code to activate." -ForegroundColor Yellow
+Write-Host ""
+Write-Host "github-verkefni also needs:" -ForegroundColor Yellow
+Write-Host "  - gh authenticated with: repo, read:org, project"
+Write-Host "  - access to the private Stafraen-Heilsa/sh-portfolio-docs repo"
+Write-Host "  - python with pyyaml (pip install pyyaml)"

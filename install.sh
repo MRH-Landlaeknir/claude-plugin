@@ -2,20 +2,49 @@
 # Stafræn Heilsa — Claude Skill Installer (macOS / Linux)
 # Run this once to install, re-run to update
 
-SKILL_NAME="nytt-verkefni"
-SKILLS_DIR="$HOME/.claude/skills/$SKILL_NAME"
-RAW="https://raw.githubusercontent.com/Stafraen-Heilsa/claude-plugin/main/skills/$SKILL_NAME"
+BASE="https://raw.githubusercontent.com/Stafraen-Heilsa/claude-plugin/main/skills"
 
-echo "Installing $SKILL_NAME skill..."
+install_skill() {
+    local name="$1"; shift
+    local dir="$HOME/.claude/skills/$name"
+    local raw="$BASE/$name"
 
-mkdir -p "$SKILLS_DIR/references"
+    echo "Installing $name..."
+    mkdir -p "$dir/references" "$dir/scripts"
 
-curl -fsSL "$RAW/SKILL.md" -o "$SKILLS_DIR/SKILL.md" && echo "  + SKILL.md"
+    curl -fsSL "$raw/SKILL.md" -o "$dir/SKILL.md" && echo "  + SKILL.md"
 
-for ref in honnunarhandbok.md throdunarhandbok.md throdunarhandbok-vidaukar.md; do
-    curl -fsSL "$RAW/references/$ref" -o "$SKILLS_DIR/references/$ref" && echo "  + references/$ref"
-done
+    for f in "$@"; do
+        mkdir -p "$dir/$(dirname "$f")"
+        if curl -fsSL "$raw/$f" -o "$dir/$f"; then
+            echo "  + $f"
+        else
+            echo "  ! $f failed" >&2
+        fi
+    done
 
-echo ""
-echo "Done! Skill installed to: $SKILLS_DIR"
+    # scripts must be executable
+    chmod +x "$dir"/scripts/*.sh 2>/dev/null
+    echo ""
+}
+
+install_skill nytt-verkefni \
+    references/honnunarhandbok.md \
+    references/throdunarhandbok.md \
+    references/throdunarhandbok-vidaukar.md
+
+install_skill github-verkefni \
+    references/taxonomy.md \
+    references/manifest-schema.md \
+    references/handbook-rules.md \
+    references/queries.md \
+    references/conventions.md \
+    scripts/sync-labels.sh
+
+echo "Done! Skills installed to: $HOME/.claude/skills/"
 echo "Restart Claude Code to activate."
+echo ""
+echo "github-verkefni also needs:"
+echo "  - gh authenticated with: repo, read:org, project"
+echo "  - access to the private Stafraen-Heilsa/sh-portfolio-docs repo"
+echo "  - python with pyyaml (pip install pyyaml)"
